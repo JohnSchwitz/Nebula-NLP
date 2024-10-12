@@ -1,10 +1,13 @@
 <template>
-    <div class="bg-[#F7C409] p-8 rounded-md max-w-lg mx-auto shadow-lg">
-      <h1 class="text-lg font-bold text-center mb-4">
+  <div class="bg-[#F7C409] min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-md max-w-lg w-full mx-4 shadow-lg">
+      <h2 class="text-base font-semibold text-center mb-4">
         Instructions to Save Your Story
-      </h1>
-      <p class="mt-4 mb-2">1. At the prompt above for Guest: enter 'Please Provide Complete Story'</p>
-      <p class="mb-4">2. Enter Story Name</p>
+      </h2>
+      <p class="mt-4 mb-2 text-left">
+        1. At the prompt above for Guest: enter 'Please Provide Complete Story'<br>Please insure that your Complete Story is displayed in the scroll box below.
+      </p>
+      <p class="mb-4 text-left">2. Enter Story Name</p>
       <input
         v-model="storyName"
         type="text"
@@ -12,91 +15,88 @@
         placeholder="Your Story Name here"
       />
       <button
+        :disabled="isSubmitting"
         @click="uploadToDatabase"
-        class="w-full bg-blue-600 text-white p-3 rounded mb-4 hover:bg-blue-700 transition"
+        :class="{
+          'bg-blue-600 hover:bg-blue-700': !isSubmitting,
+          'bg-gray-400 cursor-not-allowed': isSubmitting
+        }"
+        class="w-full text-white p-3 rounded mb-4 transition"
       >
         Upload to Database
       </button>
       <p class="text-center mb-4">After Upload to Database</p>
+      <div class="mb-4"></div>
       <button
         @click="downloadPdf"
         class="w-full bg-green-600 text-white p-3 rounded mb-4 hover:bg-green-700 transition"
       >
-        Download a PDF
+        Download a pdf
       </button>
-      <div
-        class="mt-4 p-4 border rounded overflow-y-auto shadow-inner bg-white text-gray-800"
-        style="max-height: 400px; white-space: pre-wrap;"
-      >
-        {{ story }}
-      </div>
+      <div class="mb-4"></div>
+      <textarea
+        class="block w-full p-4 border rounded overflow-y-auto shadow-inner bg-white text-gray-800 resize-none"
+        style="min-width: 100%; min-height: 15rem;"
+        readonly
+        :value="story"
+      ></textarea>
     </div>
-  </template>
-  
-  <script lang="ts">
-  import { defineComponent, ref, onMounted } from 'vue';
-  import axios from 'axios';
-  
-  export default defineComponent({
-    name: 'FormComponent',
-    setup() {
-      const userId = ref(1);
-      const storyName = ref('');
-      const story = ref('Princess Hazel lived in the Kingdom of the Dragons with her mother and father Queen Micky and King Jack. She had a big brother Prince Jackson and a baby brother Grayson. Hazel was 6 years old, Jackson was 8 and Grayson was 1. Hazel had a pony Bubbles and a faithful and ferocious creme colored cat Misty. She was startled from sleep one day by her parents crying that a young dragon had swooped in and carried off Grayson. Her parents were frozen with fear. Hazel told Jackson that it was up to them!');
-  
-      onMounted(() => {
-        // Simulating fetching story from the page content
-        const storyElement = document.querySelector('.mwai-reply.mwai-ai');
-        if (storyElement) {
-          story.value = storyElement.textContent || '';
-        }
-  
-        // Simulate a WordPress function call
-        // userId.value = 1; // Replace with actual method
-      });
-      console.log(userId.value);
-      const uploadToDatabase = async () => {
-        try {
-          await axios.post('https://nebula-nlp.com/wp-json/form-submissions-api/v2/form-submission', {
-            user_id: userId.value,
-            story_name: storyName.value,
-            story: story.value,
-          });
-          alert('Story uploaded.');
-        } catch (error) {
-          alert('Error uploading story.');
-        }
-      };
-  
-      const downloadPdf = async () => {
-        try {
-          await axios.post('https://nebula-nlp.com/wp-json/asyn-function-api/v2/pdf-download', {
-            user_id: userId.value,
-            story_name: storyName.value,
-            story: story.value,
-          });
-          alert('PDF generation initiated.');
-        } catch (error) {
-          alert('Error downloading PDF.');
-        }
-      };
-  
-      //const getCurrentUserId = (): number => {
-        // Implement this with a call or using WP-provided data
-        //return 123; // Example/mock user ID
-      //};
-  
-      return {
-        userId,
-        storyName,
-        story,
-        uploadToDatabase,
-        downloadPdf,
-      };
-    },
-  });
-  </script>
-  
-  <style scoped>
-  /* Any specific styles can go here */
-  </style>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
+
+// Reactive variables
+const userId = ref(1);
+const storyName = ref('');
+const story = ref('Princess Hazel lived in the Kingdom of the Dragons with her mother and father Queen Micky and King Jack. She had a big brother Prince Jackson and a baby brother Grayson. Hazel was 6 years old, Jackson was 8 and Grayson was 1. Hazel had a pony Bubbles and a faithful and ferocious creme colored cat Misty. She was startled from sleep one day by her parents crying that a young dragon had swooped in and carried off Grayson. Her parents were frozen with fear. Hazel told Jackson that it was up to them!');
+const isSubmitting = ref(false);
+
+onMounted(() => {
+  const element = document.getElementById('my-vue-form');
+  userId.value = element?.dataset.userId || 1;
+
+  const storyElement = document.querySelector('.mwai-reply.mwai-ai:last-child');
+  if (storyElement) {
+    story.value = storyElement.textContent || story.value;
+  }
+});
+
+const uploadToDatabase = async () => {
+  if (isSubmitting.value) return;
+
+  isSubmitting.value = true;
+  try {
+    // Simulate an API request
+    await axios.post('https://nebula-nlp.com/wp-json/form-submissions-api/v2/form-submission', {
+      user_id: userId.value,
+      story_name: storyName.value,
+      story: story.value,
+    });
+    alert('Story uploaded.');
+  } catch (error) {
+    alert('Error uploading story.');
+    isSubmitting.value = false; // Re-enable button on error
+  }
+};
+
+const downloadPdf = async () => {
+  try {
+    await axios.post('https://nebula-nlp.com/wp-json/asyn-function-api/v2/pdf-download', {
+      user_id: userId.value,
+      story_name: storyName.value,
+      story: story.value,
+    });
+    alert('PDF generation initiated.');
+  } catch (error) {
+    alert('Error downloading PDF.');
+  }
+};
+</script>
+
+<style scoped>
+/* No additional styles needed with Tailwind CSS */
+</style>
+
