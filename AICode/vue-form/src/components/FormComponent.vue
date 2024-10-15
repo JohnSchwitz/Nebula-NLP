@@ -5,7 +5,7 @@
         Instructions to Save Your Story
       </h2>
       <p class="mt-4 mb-2 text-left">
-        1. At the prompt above for Guest: enter 'Please Provide Complete Story'<br>Please insure that your Complete Story is displayed in the scroll box below.
+        1. At the StoryTeller: prompt below enter 'Please Provide Complete Story'<br>Please insure that your Complete Story is displayed in the <b>Story Scrollbox</b> below<br>before hitting Upload to Database.
       </p>
       <p class="mb-4 text-left">2. Enter Story Name</p>
       <input
@@ -25,7 +25,8 @@
       >
         Upload to Database
       </button>
-      <p class="text-center mb-4">After Upload to Database</p>
+      <div class="mb-4"></div>
+      <p class="mb-4 text-left">You may download a pdf of your story</p>
       <div class="mb-4"></div>
       <button
         @click="downloadPdf"
@@ -34,6 +35,10 @@
         Download a pdf
       </button>
       <div class="mb-4"></div>
+      <h3 class="text-base font-semibold text-center mb-4">
+        Story Scrollbox
+      </h3>
+      <div class="mb-8"></div>
       <textarea
         class="block w-full p-4 border rounded overflow-y-auto shadow-inner bg-white text-gray-800 resize-none"
         style="min-width: 100%; min-height: 15rem;"
@@ -55,7 +60,7 @@ const story = ref('Princess Hazel lived in the Kingdom of the Dragons with her m
 const isSubmitting = ref(false);
 
 onMounted(() => {
-  const element = document.getElementById('my-vue-form');
+  const element = document.getElementById('vue-form');
   userId.value = element?.dataset.userId || 1;
 
   const storyElement = document.querySelector('.mwai-reply.mwai-ai:last-child');
@@ -82,10 +87,10 @@ const uploadToDatabase = async () => {
   }
 };
 
+// Only story_name and story are required to generate pdf
 const downloadPdf = async () => {
   try {
     await axios.post('https://nebula-nlp.com/wp-json/asyn-function-api/v2/pdf-download', {
-      user_id: userId.value,
       story_name: storyName.value,
       story: story.value,
     });
