@@ -5,7 +5,7 @@
         Instructions to Save Your Story
       </h2>
       <p class="mt-4 mb-2 text-left">
-        1. At the prompt above for Guest: enter 'Please Provide Complete Story'<br>Please ensure that your Complete Story is displayed in the scroll box below.
+        1. At the prompt above for StoryTeller input: enter 'Please Provide the Complete Story'<br>Please ensure that your Complete Story is displayed in the ScrollBox below.
       </p>
       <p class="mb-4 text-left">2. Enter Story Name</p>
       <input
@@ -25,14 +25,8 @@
       >
         Upload to Database
       </button>
-      <p class="text-center mb-4">After Upload to Database</p>
+      <p class="text-center mb-4">ScrollBox with your Story<br>You may edit the Story</p>
       <div class="mb-4"></div>
-      <button
-        @click="downloadPdf"
-        class="w-full bg-green-600 text-white p-3 rounded mb-4 hover:bg-green-700 transition"
-      >
-        Download a pdf
-      </button>
       <textarea
         class="block w-full p-4 border rounded overflow-y-auto shadow-inner bg-white text-gray-800 resize-none"
         style="min-width: 100%; min-height: 15rem;"
@@ -53,6 +47,7 @@ const story = ref('Princess Hazel lived in the Kingdom of the Dragons with her m
 const isSubmitting = ref(false);
 
 onMounted(() => {
+  setTimeout(() => {
   console.log('onMounted executed');
   const element = document.getElementById('vue-form');
   if (element && element.dataset.userId) {
@@ -70,6 +65,7 @@ onMounted(() => {
   } else {
     console.error('Story Element not found.');
   }
+  }, 500); // Adjust delay as needed
 });
 
 const uploadToDatabase = async () => {
@@ -91,10 +87,10 @@ const uploadToDatabase = async () => {
   }
 };
 
+// user_id is NOT NEEDED pdf is GENERATED FROM story_name & story
 const downloadPdf = async () => {
   try {
     await axios.post('https://nebula-nlp.com/wp-json/asyn-function-api/v2/pdf-download', {
-      user_id: userId.value,
       story_name: storyName.value,
       story: story.value,
     });
