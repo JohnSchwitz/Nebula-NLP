@@ -13,24 +13,34 @@
         type="text"
         class="block w-full p-2 mb-4 border rounded shadow-sm"
         placeholder="Your Story Name here"
+        required
+        :disabled="isSubmitted"
       />
       <button
-        :disabled="isSubmitting"
-        @click="uploadToDatabase"
+        :disabled="isSubmitting || isSubmitted"
+        @click="handleFormSubmission"
         :class="{
-          'bg-blue-600 hover:bg-blue-700': !isSubmitting,
-          'bg-gray-400 cursor-not-allowed': isSubmitting
+          'bg-blue-600 hover:bg-blue-700': !isSubmitting && !isSubmitted,
+          'bg-gray-400 cursor-not-allowed': isSubmitting || isSubmitted
         }"
         class="w-full text-white p-3 rounded mb-4 transition"
       >
         Upload to Database
       </button>
-      <p class="text-center mb-4">ScrollBox with your Story<br>You may edit the Story</p>
-      <div class="mb-4"></div>
+      <div class="flex justify-center items-center mb-4">
+        <button
+          @click="refreshStory"
+          class="bg-blue-500 text-white p-2 rounded"
+        >
+          Refresh Story
+        </button>
+        <span class="text-xl font-semibold ml-4">ScrollBox</span>
+      </div>
       <textarea
         class="block w-full p-4 border rounded overflow-y-auto shadow-inner bg-white text-gray-800 resize-none"
         style="min-width: 100%; min-height: 15rem;"
-        :value="story"
+        v-model="story"
+        :disabled="isSubmitted"
       ></textarea>
     </div>
   </div>
@@ -43,12 +53,26 @@ import axios from 'axios';
 // Reactive variables
 const userId = ref(1);
 const storyName = ref('');
-const story = ref('Princess Hazel lived in the Kingdom of the Dragons with her mother and father Queen Micky and King Jack. She had a big brother Prince Jackson and a baby brother Grayson. Hazel was 6 years old, Jackson was 8 and Grayson was 1. Hazel had a pony Bubbles and a faithful and ferocious creme colored cat Misty. She was startled from sleep one day by her parents crying that a young dragon had swooped in and carried off Grayson. Her parents were frozen with fear. Hazel told Jackson that it was up to them!');
+const story = ref('');  // Initialize to an empty string
 const isSubmitting = ref(false);
+const isSubmitted = ref(false);
+
+// Function to update story from the DOM
+const updateStory = () => {
+  const storyElement = document.querySelector('.mwai-reply.mwai-ai:last-child');
+  if (storyElement) {
+    story.value = storyElement.textContent.trim();
+    console.log('Story Element Updated:', story.value);
+
+    // Enable the storyName field and submit button when a new story is detected
+    if (story.value) {
+      isSubmitted.value = false; // Reset submitted state after detecting new story
+    }
+  }
+};
 
 onMounted(() => {
-  setTimeout(() => {
-  console.log('onMounted executed');
+  // Check for user ID in data attributes, handle scenario where userId might be present
   const element = document.getElementById('vue-form');
   if (element && element.dataset.userId) {
     userId.value = parseInt(element.dataset.userId, 10);
@@ -57,20 +81,38 @@ onMounted(() => {
     console.error('User ID attribute not set or not a number');
   }
 
-  const storyElement = document.querySelector('.mwai-reply.mwai-ai:last-child');
-  console.log('Story Element:', storyElement);
-  if (storyElement) {
-    story.value = storyElement.textContent;
-    console.log('Story Element Found:', story.value);
-  } else {
-    console.error('Story Element not found.');
-  }
-  }, 500); // Adjust delay as needed
+  // Observe body for changes and update story
+  const observer = new MutationObserver(updateStory);
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // Initial update
+  updateStory();
 });
 
-const uploadToDatabase = async () => {
-  if (isSubmitting.value) return;
+// Handle form submission
+const handleFormSubmission = async () => {
+  if (isSubmitting.value || isSubmitted.value) return;
 
+  if (!storyName.value.trim()) {
+    alert('Please enter a story name.');
+    return;
+  }
+
+  if (!story.value.trim()) {
+    alert('Please ensure the story is displayed in the ScrollBox.');
+    return;
+  }
+
+  await uploadToDatabase();
+};
+
+// Refresh Story action
+const refreshStory = () => {
+  updateStory();
+};
+
+// Handle uploading to database
+const uploadToDatabase = async () => {
   isSubmitting.value = true;
   try {
     await axios.post('https://nebula-nlp.com/wp-json/form-submissions-api/v2/form-submission', {
@@ -78,26 +120,13 @@ const uploadToDatabase = async () => {
       story_name: storyName.value,
       story: story.value,
     });
-    alert('Story uploaded.');
+    alert('Story uploaded successfully.');
+    isSubmitted.value = true; // Only allow submit once
   } catch (error) {
     console.error('Upload error:', error);
-    alert('Error uploading story.');
+    alert('Error uploading story. Please try again.');
   } finally {
     isSubmitting.value = false;
-  }
-};
-
-// user_id is NOT NEEDED pdf is GENERATED FROM story_name & story
-const downloadPdf = async () => {
-  try {
-    await axios.post('https://nebula-nlp.com/wp-json/asyn-function-api/v2/pdf-download', {
-      story_name: storyName.value,
-      story: story.value,
-    });
-    alert('PDF generation initiated.');
-  } catch (error) {
-    console.error('Error downloading PDF:', error);
-    alert('Error downloading PDF.');
   }
 };
 </script>
@@ -105,4 +134,6 @@ const downloadPdf = async () => {
 <style scoped>
 /* No additional styles needed with Tailwind CSS */
 </style>
+
+
 
