@@ -3,7 +3,7 @@ import FormComponent from './components/FormComponent.vue'
 </script>
 
 <template>
-    <div id="app">
+    <div id="vue-form">
       <FormComponent />
     </div>
 </template>

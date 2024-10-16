@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: VueAI
-Description: A simple plugin to add a Vue.js form using a shortcode.
+Description: A simple plugin to add a Vue.js form using a shortcode [vueform].
 Version: 1.0
 Author: John G Schwitz
 */
@@ -29,7 +29,5 @@ function vue_form_shortcode() {
 // Retrieve the user_id
     $current_user_id = get_current_user_id();
     return '<div id="vue-form" data-user-id="' . esc_attr($current_user_id) . '"></div>';
-    // Ensure to include a div that matches the element ID the Vue app mounts to
-    return '<div id="app"></div>';
 }
-add_shortcode('vueform', 'vue_form_shortcode');
+add_shortcode('vueform', 'vue_form_shortcode'); // does not need to match id="vue-form"

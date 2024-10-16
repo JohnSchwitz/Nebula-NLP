@@ -1,7 +1,7 @@
 <?php
 /**
-* Plugin Name: Form Submissions API
-* Version: 2
+* Plugin Name: Form Submission API
+* Version: 3
 * Description: This plugin creates table user_stories and registers http endpoints.
 * Author: John G Schwitz
 * Author URI: https://nebula-nlp.com
@@ -94,20 +94,11 @@ function create_form_submission( $request ){
     global $wpdb;
     $table_name = $wpdb->prefix . 'user_stories';
     
-    /**
-     * This may be needed to get user id 
-     * wp-load.php
-     * THIS IS NOT WORKING
-     * retrieves {story_id 2, user_id 100, and Hazel story}
-    */
-
-    $user_ID = get_current_user_id(); 
-    
     $rows = $wpdb->insert(
         $table_name,
         array(
             'story_id' => $request['story_id'],
-            'user_id' => $user_ID, 
+            'user_id' => $request['user_id'],
             'story_name' => $request['story_name'],
             'story' => $request['story'],
         )
