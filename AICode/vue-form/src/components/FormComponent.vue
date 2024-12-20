@@ -5,9 +5,9 @@
         Instructions to Save Your Story
       </h2>
       <p class="mt-4 mb-2 text-left">
-        1. At the prompt above for StoryTeller input: enter 'Please Provide the Complete Story'<br>Please ensure that your Complete Story is displayed in the ScrollBox below.
+        1. At the prompt above for StoryTeller input: enter 'Please Provide the Complete Story'<br>Please ensure that your Complete Story is displayed in the ScrollBox below<br>You may EDIT your story in the ScrollBox
       </p>
-      <p class="mb-4 text-left">2. Enter Story Name</p>
+      <p class="mb-4 text-left">2. Enter Story Name and Upload to Database<br>This permits you to retriew all your Stories as a pdf</p>
       <input
         v-model="storyName"
         type="text"
