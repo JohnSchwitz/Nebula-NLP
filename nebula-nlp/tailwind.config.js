@@ -8,6 +8,9 @@ export default {
     extend: {
       colors: {
         'nebula-yellow': '#FFC107',
+        'taos':'#FFC107',
+        'taos-base':'#FF9B40',
+        'taos-accent':'#FF9579',
         'chatbox-dark': '#4a4a4a',
         'chatbox-light': '#666666',
       },

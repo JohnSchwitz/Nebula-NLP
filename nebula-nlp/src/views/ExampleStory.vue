@@ -2,19 +2,20 @@
 <template>
   <div class="max-w-4xl mx-auto px-4">
     <div class="mb-8">
-      <p class="text-2xl font-didot leading-[1.2]">
-        Artificial intelligence (AI) is now capable of generating a story guided by a user's instructions. The AI Agent permitted me to revise the story as many times
-        as I desired and altered the plot following my instructions. Not only can AI generate a story it can create an image to accompany the story. This is a major
-        leap in capability from 2 years ago when this site originated. Head over to: Story Generation to create your own story.
+      <p class="text-lg font-didot leading-[1.2]">
+        Artificial intelligence (AI) is now capable of generating a story guided by a user's instructions. The AI StoryCreator 
+        permitted me to revise the story as many times as I desired and altered the plot following my instructions. Not only 
+        can AI generate a story it can create an image to accompany the story. This is a major leap in capability from 2 years 
+        ago when this site originated. Head over to: Create Story to create your own story.
       </p>
     </div>
 
-    <h1 class="text-[36px] font-didot text-center mb-8 leading-[1.2]">
+    <h1 class="text-2xl font-didot text-center mb-8 leading-[1.2]">
       Fearless Princess Hazel a story Generated using Artificial Intelligence
     </h1>
 
     <div class="bg-white rounded-lg p-6 shadow-lg">
-      <p class="text-xl font-didot leading-[1.2]">
+      <p class="text-lg font-didot leading-[1.2]">
         Princess Hazel peered out the window of her bedroom in the palace, watching as dusk fell over the Kingdom of the Dragons. At only 5 years old, she felt a yearning for adventure that burned brighter than even the fading sunset.
         Little did she know, her life was about to be turned upside down. As night blanketed the kingdom, terrible screams echoed from downstairs – it was her mother, Queen Micky. Hazel raced down the marble halls and what she saw terrified her…
         Jackson's bedroom door was flung open wide, clothes and belongings strewn violently about the room. In the center of the chaos, a crude ransom note lay crumpled. Jackson had been kidnapped. By who and why was still a mystery. All Hazel knew was that her beloved brother was missing, snatched away in the night.

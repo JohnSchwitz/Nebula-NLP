@@ -34,12 +34,14 @@
       }
     },
     methods: {
-      login() {
-        // Replace 'your-secure-password' with your actual password
+      async login() {
         if (this.password === 'ZaQ!2wsx') {
           localStorage.setItem('isAdmin', 'true')
-          this.$router.push('/admin')
-          window.location.reload() // Force a page reload
+          try {
+            await this.$router.push('/admin')
+          } catch (err) {
+            console.error('Navigation error:', err)
+          }
         } else {
           this.error = 'Invalid password'
           this.password = ''

@@ -2,75 +2,73 @@
 <template>
   <div class="max-w-4xl mx-auto px-4">
     <div class="mb-8">
-      <h1 class="text-[36px] font-didot text-center mb-4 leading-[1.2]">
-        Create a Narrative from Previous Stories
-      </h1>
-      <p class="text-2xl font-didot leading-[1.2] mb-6">
-        The AI Agent will create a NARRATIVE from your previous STORIES. First, check the boxes of the stories you wish to include in the narrative. The AI will then create a NARRATIVE based on the characters, their names, the setting, and action or challenge using the selected STORIES. The AI agent will then add to the narrative providing new twists as it weaves the stories together. You may modify as many times as required.
+      <p class="text-lg font-didot leading-[1.2]">
+        The AI Agent will create a NARRATIVE from your previous STORIES. 
+        First, check the boxes of the stories you wish to include and click Start Narrative.
+        These stories are placed in the ScrollBox permitting you to edit them. 
+        After editing enter your contribution to the narrative in StoryTeller input. 
+        The AI agent will then add to the narrative providing new twists as it weaves the stories together. 
+        You may modify as many times as required and edit the result.
       </p>
     </div>
 
+    <h2 class="text-2xl font-didot mb-4">Select Stories to Include</h2>
+
     <div class="bg-white rounded-lg p-6 shadow-lg mb-6">
-      <h2 class="text-2xl font-didot mb-4">Select Stories to Include:</h2>
-      
-      <!-- Loading state -->
-      <div v-if="loading" class="text-center py-4">
-        Loading stories...
+      <div class="flex mb-4 font-didot font-bold">
+        <div class="w-1/3">
+          Story Name
+        </div>
+        <div class="w-2/3">
+          Story
+        </div>
       </div>
 
-      <!-- Stories list -->
-      <div v-else-if="stories.length > 0">
-        <ul class="space-y-3">
-          <li v-for="story in stories" 
-              :key="story.story_id" 
-              class="flex items-center space-x-3">
+      <div class="space-y-4">
+        <div class="flex items-start border-b pb-2">
+          <div class="w-1/3 flex items-center">
             <input 
               type="checkbox" 
-              :value="story.story_id" 
+              value="1" 
               v-model="selectedStoryIds"
-              class="w-5 h-5"
+              class="mr-2 w-4 h-4"
             />
-            <span class="text-xl font-didot">{{ story.story_name }}</span>
-          </li>
-        </ul>
-      </div>
-
-      <!-- No stories message -->
-      <div v-else class="text-center py-4 text-gray-600">
-        No stories available. Create some stories first!
-      </div>
-    </div>
-
-    <button 
-      v-if="stories.length > 0"
-      @click="generateNarrative"
-      class="bg-white text-black px-6 py-3 rounded font-bold text-lg hover:bg-gray-100 transition-colors font-didot mb-6"
-    >
-      Start Narrative
-    </button>
-
-    <div class="bg-chatbox-dark rounded-lg p-4 mb-6 min-h-[200px] max-h-[400px] overflow-y-auto">
-      <div v-for="(message, index) in messages" 
-           :key="index" 
-           class="mb-3">
-        <div class="bg-chatbox-light rounded p-3">
-          <span v-if="message.sender === 'AI'" class="text-white font-bold">AI: </span>
-          <span class="text-white font-didot">{{ message.text }}</span>
+            <span class="font-didot">The Lost Expedition</span>
+          </div>
+          <div class="w-2/3 font-didot text-sm">
+            Professor Amelia Thorne, a paleontologist with a fiery spirit and a penchant for the unorthodox, had scoffed at the notion of a living Pterodactylus...
+          </div>
+        </div>
+        <div class="flex items-start border-b pb-2">
+          <div class="w-1/3 flex items-center">
+            <input 
+              type="checkbox" 
+              value="2" 
+              v-model="selectedStoryIds"
+              class="mr-2 w-4 h-4"
+            />
+            <span class="font-didot">Fearless Princess Hazel</span>
+          </div>
+          <div class="w-2/3 font-didot text-sm">
+            Princess Hazel peered out the window of her bedroom in the palace, watching as dusk fell over the Kingdom of the Dragons...
+          </div>
         </div>
       </div>
     </div>
-
-    <div class="instruction-title text-[36px] font-didot text-center mb-4 leading-[1.2]">
-      Instructions to Save Your Narrative and create a PDF
-    </div>
     
-    <div class="instructions-area text-2xl font-didot text-left leading-[1.2] mb-6">
-      At the prompt below click the Complete Narrative BUTTON. You may then EDIT your narrative in the ScrollBox.
-      <br/>
-      Enter a Narrative Name, Upload to Database, and then download a PDF.
+    <div class="my-8">
+      <h2 class="text-2xl font-bold font-didot text-center mb-4 leading-[1.2]">
+        Instructions to Save Your Narrative and create a PDF
+      </h2>
+      <p class="text-lg font-didot text-left leading-[1.2]">
+        1) At the prompt below click the Create Narrative BUTTON. You may then EDIT your narrative in the ScrollBox.
+      </p>
+      <p class="text-lg font-didot text-left leading-[1.2]">
+        2) Enter a Narrative Name, Upload to Database, and then download a PDF.
+      </p>
     </div>
 
-    <div class="bottom-area flex gap-4 mb-6">
+    <div class="flex flex-wrap items-center gap-4 my-2">
       <label for="narrativeName" class="font-didot">Narrative Name</label>
       <input 
         type="text" 
@@ -79,23 +77,90 @@
         placeholder="your narrative name here" 
         class="border rounded px-3 py-2 w-48 font-didot"
       />
-      <button class="bg-white text-black px-4 py-2 rounded font-bold hover:bg-gray-100 font-didot">
-        Upload to Database
-      </button>
-      <button class="bg-white text-black px-4 py-2 rounded font-bold hover:bg-gray-100 font-didot">
-        Download PDF
+<!-- Upload to Database button -->
+<button 
+  @click="uploadToDatabase"
+  :disabled="!isCompleted || !narrativeName.trim() || narrativeName === 'Narrative Title'"
+  class="bg-white text-black px-4 py-2 rounded font-bold hover:bg-gray-100 font-didot disabled:opacity-50 disabled:cursor-not-allowed"
+>
+  Upload to Database
+</button>
+
+<!-- Download PDF button -->
+<button 
+  @click="downloadPDF"
+  :disabled="!isCompleted"
+  class="bg-white text-black px-4 py-2 rounded font-bold hover:bg-gray-100 font-didot disabled:opacity-50 disabled:cursor-not-allowed"
+>
+  Download PDF
+</button>
+
+<div class="flex flex-wrap items-center justify-between gap-4 mb-0 w-full">
+  <p class="text-lg font-didot font-bold text-left leading-[1.2]">
+    AI StoryCreator:
+  </p>
+  <!-- Start and Create Narrative button -->
+  <button 
+    @click="startNarrative"
+    :disabled="!narrativeContent.trim()"
+    class="bg-white text-black px-4 py-2 rounded font-bold hover:bg-gray-100 font-didot disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    Start Narrative
+  </button>
+  <button 
+    @click="createNarrative"
+    :disabled="!narrativeContent.trim()"
+    class="bg-white text-black px-4 py-2 rounded font-bold hover:bg-gray-100 font-didot disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    Create Narrative
+  </button>
+        <div class="flex-grow text-center">
+          <p class="text-xl font-didot font-bold">ScrollBox</p>
+        </div>
+        <div class="w-[140px]"></div>
+</div>
+</div> 
+
+    <div class="bg-chatbox-light rounded-lg p-4 mb-4 min-h-[200px] max-h-[400px] overflow-y-auto">
+      <div v-if="!isEditable" v-for="(message, index) in messages" 
+          :key="index" 
+          class="mb-3">
+        <div :class="message.sender === 'AI' ? 'bg-white' : 'bg-white'" 
+            class="rounded p-3 relative">
+          <span class="text-black block" 
+                :class="message.sender === 'AI' ? 'ml-0' : ''">
+            {{ message.text }}
+          </span>
+        </div>
+      </div>
+      <textarea 
+        v-if="isEditable"
+        v-model="storyContent"
+        class="w-full h-full bg-white text-black p-3 rounded resize-none"
+      ></textarea>
+    </div>
+
+    <div class="bg-chatbox-light rounded-lg p-4 flex gap-4 items-start">
+      <textarea 
+        v-model="narrativeInput" 
+        placeholder="StoryTeller input:"
+        rows="2"
+        class="flex-1 bg-chatbox-light text-white placeholder-gray-300 resize-y p-2 focus:outline-none"
+      ></textarea>
+      <button 
+        @click="sendNarrativeInput"
+        :disabled="!narrativeInput.trim() || loading"
+        class="bg-white text-black px-6 py-2 rounded font-bold text-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Send
       </button>
     </div>
 
-    <div class="text-center font-bold mb-2 font-didot">ScrollBox</div>
-    <textarea 
-      v-model="narrativeContent" 
-      readonly 
-      class="w-full min-h-[300px] border rounded p-4 resize-y mb-8 font-didot"
-    ></textarea>
+    <div v-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+      <span class="block sm:inline">{{ error }}</span>
+    </div>
   </div>
 </template>
-
 <script>
 import axios from 'axios'
 
@@ -103,53 +168,191 @@ export default {
   name: 'CreateNarrative',
   data() {
     return {
-      stories: [],
+      stories: [
+        {
+          story_id: 1,
+          story_name: "The Lost Expedition",
+          story_content: "Professor Amelia Thorne, a paleontologist with a fiery spirit and a penchant for the unorthodox, had scoffed at the notion of a living Pterodactylus..."
+        },
+        {
+          story_id: 2,
+          story_name: "Fearless Princess Hazel",
+          story_content: "Princess Hazel peered out the window of her bedroom in the palace, watching as dusk fell over the Kingdom of the Dragons..."
+        }
+      ],
       narrativeContent: "",
       narrativeName: "Narrative Title",
       selectedStoryIds: [],
+      selectedStories: [], // To store full story details for PDF
       messages: [],
+      narrativeInput: "",
+      loading: false,
+      error: "",
       user_id: 1,
-      loading: true
+      isEditable: false,
+      isCompleted: false,      
+      narrativePrompt: `Creating a narrative from selected stories. The AI will weave together the characters, settings, and plots into a cohesive narrative with new twists and connections. You may modify the narrative as needed.`
     }
   },
-  async mounted() {
+  mounted() {
     axios.defaults.baseURL = import.meta.env.VITE_APP_API_URL
-    await this.fetchStories()
+    this.messages.push({ sender: 'AI', text: this.narrativePrompt })
   },
   methods: {
-    async fetchStories() {
+    async generateNarrative() {
+  if (this.selectedStoryIds.length === 0) {
+    this.error = "Please select at least one story"
+    return
+  }
+
+  this.error = ""
+  this.loading = true
+  try {
+    this.selectedStories = this.stories.filter(story => 
+      this.selectedStoryIds.includes(story.story_id)
+    )
+    
+    // Combine selected stories into editable content
+    this.narrativeContent = this.selectedStories
+      .map(story => story.story_content)
+      .join('\n\n')
+    
+    this.isEditable = true  // Make content editable immediately
+  } catch (error) {
+    this.error = "Failed to start narrative. Please try again."
+    console.error("Error starting narrative:", error)
+  } finally {
+    this.loading = false
+  }
+},
+
+    async sendNarrativeInput() {
+      if (!this.narrativeInput.trim()) return
+
+      this.error = ""
+      this.loading = true
       try {
-        this.loading = true
-        const response = await axios.get('/get_stories', { 
-          params: { user_id: this.user_id } 
+        this.messages.push({ sender: 'StoryTeller', text: this.narrativeInput })
+        const response = await axios.post('/update_narrative', {
+          user_id: this.user_id,
+          narrative_input: this.narrativeInput,
+          current_narrative: this.narrativeContent,
+          selected_stories: this.selectedStories // Include source stories
         })
-        this.stories = response.data || []
+        this.messages.push({ sender: 'AI', text: response.data.narrative })
+        this.narrativeContent = response.data.narrative
+        this.narrativeInput = ""
       } catch (error) {
-        console.error("Error fetching stories:", error)
-        this.stories = []
+        this.error = "Failed to update narrative. Please try again."
+        console.error("Error updating narrative:", error)
       } finally {
         this.loading = false
       }
     },
-    async generateNarrative() {
+
+    async uploadToDatabase() {
+      if (!this.narrativeName.trim() || !this.narrativeContent.trim()) return
+
+      this.error = ""
+      this.loading = true
       try {
-        this.messages.push({sender: 'StoryTeller', text: "Starting Narrative Generation..."})
-        const response = await axios.post('/create_narrative', {
+        const response = await axios.post('/save_narrative', {
           user_id: this.user_id,
-          story_ids: this.selectedStoryIds
+          narrative_name: this.narrativeName,
+          narrative_content: this.narrativeContent,
+          source_stories: this.selectedStories // Include source stories
         })
-        this.messages.push({sender: 'AI', text: response.data.story})
-        this.narrativeContent = response.data.story
+        // Add success message or notification here
+        console.log('Narrative saved successfully')
       } catch (error) {
-        console.error("Error generating narrative:", error)
+        this.error = "Failed to save narrative. Please try again."
+        console.error("Error saving narrative:", error)
+      } finally {
+        this.loading = false
       }
     },
-    async saveNarrative() {
-      // Implement save logic
+
+    async downloadPDF() {
+      if (!this.narrativeContent.trim()) return
+
+      this.error = ""
+      this.loading = true
+      try {
+        const response = await axios.post('/generate_narrative_pdf', {
+          narrative_name: this.narrativeName,
+          narrative_content: this.narrativeContent,
+          source_stories: this.selectedStories.map(story => ({
+            name: story.story_name,
+            id: story.story_id
+          }))
+        }, { responseType: 'blob' })
+
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', `${this.narrativeName || 'narrative'}.pdf`)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+      } catch (error) {
+        this.error = "Failed to generate PDF. Please try again."
+        console.error("Error generating PDF:", error)
+      } finally {
+        this.loading = false
+      }
     },
-    downloadPDF() {
-      // Implement PDF download logic
+
+    async createNarrative() {
+  if (!this.narrativeContent.trim()) return
+
+  this.error = ""
+  this.loading = true
+  try {
+    const response = await axios.post('/complete_narrative', {
+      user_id: this.user_id,
+      narrative_content: this.narrativeContent,
+      source_stories: this.selectedStories
+    })
+    this.narrativeContent = response.data.narrative
+    this.isEditable = true
+    this.isCompleted = true  // Enable other buttons
+  } catch (error) {
+    this.error = "Failed to complete narrative. Please try again."
+    console.error("Error completing narrative:", error)
+  } finally {
+    this.loading = false
+  }
+},
+
+    // Helper method to track selected stories
+    updateSelectedStories() {
+      this.selectedStories = this.stories.filter(story => 
+        this.selectedStoryIds.includes(story.story_id)
+      )
+    }
+  },
+  watch: {
+    // Watch for changes in selected stories
+    selectedStoryIds: {
+      handler() {
+        this.updateSelectedStories()
+      },
+      deep: true
     }
   }
 }
 </script>
+
+<style scoped>
+@font-face {
+  font-family: 'Didot';
+  src: url('@/assets/fonts/Didot.woff2') format('woff2'),
+       url('@/assets/fonts/Didot.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.font-didot {
+  font-family: 'Didot', serif;
+}
+</style>
