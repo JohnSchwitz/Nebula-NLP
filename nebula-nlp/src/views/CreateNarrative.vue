@@ -145,7 +145,7 @@
         v-model="narrativeInput" 
         placeholder="StoryTeller input:"
         rows="2"
-        class="flex-1 bg-chatbox-light text-white placeholder-gray-300 resize-y p-2 focus:outline-none"
+        class="flex-1 bg-white placeholder-black resize-y p-2 focus:outline-none"
       ></textarea>
       <button 
         @click="sendNarrativeInput"
