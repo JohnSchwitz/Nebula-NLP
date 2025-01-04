@@ -1,5 +1,10 @@
 // CreateNarrative.vue
 <template>
+  <input v-model="prompt" placeholder="Enter your prompt">
+  <button @click="generateText">Generate Narrative</button>
+  <div v-if="story">
+      {{ story }}
+  </div>
   <div class="max-w-4xl mx-auto px-4">
     <div class="mb-8">
       <p class="text-lg font-didot leading-[1.2]">
@@ -161,8 +166,29 @@
     </div>
   </div>
 </template>
+
 <script>
 import axios from 'axios'
+import api from './api'
+import { ref, onMounted } from 'vue'
+
+const story = ref("")
+const prompt = ref("")
+const conversationId = ref(null)
+
+onMounted(async () => {  // Get a new conversation ID when the component mounts
+  conversationId.value = await api.startStoryCreation()
+})
+
+async function generateText(){
+    try {
+        story.value = await api.generateNarrative(prompt.value, conversationId.value)
+
+    } catch (error) {
+        console.error(error)
+
+    }
+}
 
 export default {
   name: 'CreateNarrative',

@@ -97,9 +97,13 @@ def api_start_story_creation():
 def api_generate_narrative():
     data = request.get_json()
     prompt = data.get('prompt')
-    conversation_id = data.get('conversationId') # Get conversationId from frontend
+    conversation_id = data.get('conversationId') 
 
-    # ... (Gemini API call - use conversation_id to construct the 'name' parameter)
+    try:
+        conversation_name = (
+            f"projects/{PROJECT_ID}/locations/us-central1/dataStores/"
+            f"{DATASTORE_ID}/conversations/{conversation_id}"  # Use the received conversation_id
+        )
 
 @app.route('/api/createStory', methods=['POST'])
 def api_create_story():

@@ -123,18 +123,21 @@
 <script>
 import axios from 'axios'
 import api from './api'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 
 const story = ref("")
 const prompt = ref("")
 const conversationId = ref(null)
 
+onMounted(async () => {  // Get a new conversation ID when the component mounts
+  conversationId.value = await api.startStoryCreation()
+})
+
 async function startStory(){
   conversationId.value = await api.startStoryCreation()
 
 }
-
 
 async function generateText(){
     try {
