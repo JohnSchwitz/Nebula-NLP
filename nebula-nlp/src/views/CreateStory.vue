@@ -122,6 +122,27 @@
 
 <script>
 import axios from 'axios'
+import api from './api'
+import { ref } from 'vue'
+
+
+const story = ref("")
+const prompt = ref("")
+const conversationId = ref(null)
+
+async function startStory(){
+  conversationId.value = await api.startStoryCreation()
+
+}
+
+
+async function generateText(){
+    try {
+        story.value = await api.generateNarrative(prompt.value, conversationId.value)
+    } catch (error) {
+        console.error(error)
+    }
+}
 
 export default {
     name: 'CreateStory',
