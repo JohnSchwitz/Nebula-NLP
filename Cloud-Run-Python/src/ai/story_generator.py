@@ -1,7 +1,8 @@
 # src/ai/story_generator.py
-from gemini_direct import GeminiAPI
-import asyncio
-import time
+from src.ai.gemini_direct import GeminiAPI
+import logging
+
+logger = logging.getLogger(__name__)
 
 class StoryGenerator:
     def __init__(self):
@@ -26,51 +27,12 @@ class StoryGenerator:
                 temperature=0.8
             )
             
-            if isinstance(response, str) and response.startswith('Error'):
-                print(f"Error occurred: {response}")
+            if response is None or (isinstance(response, str) and response.startswith('Error')):
+                logger.error(f"Story generation failed: {response}")
                 return None
                 
             return response
 
         except Exception as e:
-            print(f"Error generating story: {str(e)}")
+            logger.error(f"Error generating story: {str(e)}")
             return None
-
-    def complete_story(self, current_story):
-        try:
-            completion_prompt = f"""
-            Complete this story with a satisfying ending:
-            {current_story}
-            """
-            
-            response = self.gemini.generate_content(
-                completion_prompt,
-                max_tokens=1024,
-                temperature=0.7
-            )
-            
-            if isinstance(response, str) and response.startswith('Error'):
-                print(f"Error occurred: {response}")
-                return None
-                
-            return response
-
-        except Exception as e:
-            print(f"Error completing story: {str(e)}")
-            return None
-
-def test_story_generator():
-    generator = StoryGenerator()
-    
-    # Test story creation
-    prompt = "A story about a young scientist who discovers something unexpected in the Amazon rainforest."
-    print("\nGenerating story...")
-    story = generator.create_story(prompt)
-    
-    if story:
-        print(f"\nGenerated Story:\n{story}")
-    else:
-        print("Failed to generate story")
-
-if __name__ == "__main__":
-    test_story_generator()
