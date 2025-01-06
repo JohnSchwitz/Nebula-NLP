@@ -1,9 +1,13 @@
 // CreateNarrative.vue
 <template>
-  <input v-model="prompt" placeholder="Enter your prompt">
-  <button @click="generateText">Generate Narrative</button>
-  <div v-if="story">
-      {{ story }}
+  
+  
+  <div class="max-w-4xl mx-auto px-4">
+      <input v-model="prompt" placeholder="Generate Narrative">
+      <button @click="generateText">Generate Narrative</button>
+      <div v-if="story">
+          {{ story }}
+      </div>
   </div>
   <div class="max-w-4xl mx-auto px-4">
     <div class="mb-8">
