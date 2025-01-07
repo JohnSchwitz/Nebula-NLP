@@ -118,11 +118,44 @@
    </div>
    <img v-if="imageUrl" :src="imageUrl" alt="Generated image" class="w-full rounded-lg" />
  </div>
+
+ <textarea 
+    data-test="storyteller-input"
+    v-model="storyTellerInput" 
+    placeholder="StoryTeller input:"
+  ></textarea>
+  
+  <button 
+    data-test="send-button"
+    @click="generateStory"
+  >
+    Send
+  </button>
+
+  <button 
+    data-test="complete-button"
+    @click="completeStory"
+  >
+    Complete Story
+  </button>
+
+  <input 
+    data-test="story-name"
+    v-model="storyName"
+  />
+
+  <button 
+    data-test="upload-button"
+    @click="uploadToDatabase"
+  >
+    Upload to Database
+  </button>
+
 </template>
 
 <script>
 import axios from 'axios'
-import api from './api'
+import api from './services/api'
 import { ref, onMounted } from 'vue'
 
 
@@ -161,9 +194,11 @@ export default {
             user_id: 1,
             messages: [],
             storyTellerInput: "",
-           error: "",
+            error: "",
             loading: false,
-            isEditable: false
+            isEditable: false,
+            isStoryCompleted: false,
+            isScrollBoxEditable: false           
        }
     },
     computed: {
@@ -174,7 +209,8 @@ export default {
     mounted() {
        axios.defaults.baseURL = import.meta.env.VITE_APP_API_URL
        this.messages.push({ sender: 'AI', text: this.storyPrompt })
-    },
+    },   
+    
     methods: {
        async generateStory() {
            if (!this.storyTellerInput.trim()) return
@@ -196,27 +232,24 @@ export default {
          } finally {
            this.loading = false
          }
-   },
-   async uploadToDatabase() {
-          if (!this.storyName.trim() || !this.storyContent.trim()) return
+      },
+      async uploadToDatabase() {
+        if (!this.isStoryCompleted || !this.storyName.trim()) {
+          this.error = "Please complete the story and provide a title first"
+          return
+        }
 
-           this.error = ""
-            this.loading = true
-          try {
-             const response = await axios.post('/save_story', {
-              user_id: this.user_id,
-               story_name: this.storyName,
-              story_content: this.storyContent
-           })
-             // Add success message or notification here
-             console.log('Story saved successfully')
-      } catch (error) {
-           this.error = "Failed to save story. Please try again."
-           console.error("Error saving story:", error)
-         } finally {
-           this.loading = false
-       }
-    },
+        try {
+          const response = await axios.post('/save_story', {
+            user_id: this.user_id,
+            story_name: this.storyName,
+            story_content: this.storyContent
+          })
+          // Show success message
+        } catch (error) {
+          this.error = "Failed to save story"
+        }
+      },
      async downloadPDF() {
       if (!this.storyContent.trim()) return
 
@@ -259,26 +292,26 @@ export default {
          this.loading = false
       }
    },
-    async completeStory() {
-       this.error = ""
-         this.loading = true
-         try {
-           const response = await axios.post('/complete_story', {
-           user_id: this.user_id,
-                story_content: this.messages.map(m => m.text).join('\n')
-            })
-             this.storyContent = response.data.story
-            this.isEditable = true
-           // Clear messages and show the complete story in editable mode
-           this.messages = []
-       } catch (error) {
-           this.error = "Failed to complete story. Please try again."
-          console.error("Error completing story:", error)
-        } finally {
-           this.loading = false
-       }
-     }
-   },
+   async completeStory() {   
+    if (!this.storyContent.trim()) return
+    
+    this.error = ""
+    this.loading = true
+    try {
+      const response = await axios.post('/complete_story', {
+        user_id: this.user_id,
+        story_content: this.storyContent
+      })
+      this.storyContent = response.data.story
+      this.isStoryCompleted = true
+      this.isScrollBoxEditable = true  // Enable editing after completion
+    } catch (error) {
+      this.error = "Failed to complete story"
+    } finally {
+      this.loading = false
+    }
+   }
+  }
 }
 </script>
 <style scoped>

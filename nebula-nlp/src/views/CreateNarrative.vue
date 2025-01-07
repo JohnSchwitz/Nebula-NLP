@@ -1,13 +1,23 @@
 // CreateNarrative.vue
-<template>
-  
-  
+<template> 
   <div class="max-w-4xl mx-auto px-4">
-      <input v-model="prompt" placeholder="Generate Narrative">
-      <button @click="generateText">Generate Narrative</button>
+    <div class="flex flex-wrap items-left  gap-4 mb-2 w-full">
+          <p class="text-lg font-didot font-bold text-left leading-[1.2]">
+            Generate Narrative:
+          </p>  
+      <!-- Create Narrative button -->
+      <button 
+        @click="generateText"
+        class="bg-white text-black px-4 py-2 rounded font-bold hover:bg-gray-100 font-didot"
+      >
+        Create Narrative
+      </button>  
+      <!-- <input v-model="prompt" placeholder="Generate Narrative">
+      <button @click="generateText">Generate Narrative</button> -->
       <div v-if="story">
           {{ story }}
       </div>
+    </div>
   </div>
   <div class="max-w-4xl mx-auto px-4">
     <div class="mb-8">
@@ -173,7 +183,7 @@
 
 <script>
 import axios from 'axios'
-import api from './api'
+import api from './services/api'
 import { ref, onMounted } from 'vue'
 
 const story = ref("")

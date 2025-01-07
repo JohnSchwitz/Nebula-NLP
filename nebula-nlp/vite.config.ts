@@ -1,28 +1,20 @@
-import { defineConfig, loadEnv } from 'vite'
+// vite.config.ts
+import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { fileURLToPath, URL } from 'node:url'
+import path from 'path'
 
-export default defineConfig(({ command, mode }) => {
-  const env = loadEnv(mode, process.cwd(), '')
-  return {
-    plugins: [vue()],
-    resolve: {
-      alias: {
-        '@': fileURLToPath(new URL('./src', import.meta.url))
-      }
-    },
-    css: {
-      preprocessorOptions: {
-        css: {
-          charset: false
-        }
-      }
-    },
-    server: {
-      port: 3000
-    },
-    define: {
-      'process.env': env
+export default defineConfig({
+  plugins: [vue()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      'test': path.resolve(__dirname, './tests')
     }
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./tests/setup/test-setup.ts'],
+    include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
   }
 })

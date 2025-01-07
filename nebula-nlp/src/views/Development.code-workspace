@@ -1,15 +1,7 @@
 {
-	"folders": [
-		{
-			"path": "../../.."
-		},
-		{
-			"path": "../../../../bitbucket"
-		}
-	],
-	"settings": {
-		"files.watcherExclude": {
-			"**/target": true
-		}
-	}
+    "settings": {
+        "files.watcherExclude": {
+            "**/target": true
+        }
+    }
 }
