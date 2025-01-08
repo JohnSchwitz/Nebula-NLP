@@ -1,21 +1,25 @@
-// src/services/api.ts
 import axios from 'axios'
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL
-})
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
-export const generateStory = async (prompt: string) => {
-  const response = await api.post('/generate_story', { prompt })
-  return response.data
+const api = {
+  async generateStory(prompt: string): Promise<string> {
+    try {
+      const response = await axios.post(`${API_URL}/create_story`, { prompt })
+      return response.data.story
+    } catch (error) {
+      throw new Error('Failed to generate story. Please try again.')
+    }
+  },
+
+  async completeStory(content: string): Promise<string> {
+    try {
+      const response = await axios.post(`${API_URL}/complete_story`, { content })
+      return response.data.story
+    } catch (error) {
+      throw new Error('Failed to complete story')
+    }
+  }
 }
 
-export const completeStory = async (content: string) => {
-  const response = await api.post('/complete_story', { content })
-  return response.data
-}
-
-export default {
-  generateStory,
-  completeStory
-}
+export default api

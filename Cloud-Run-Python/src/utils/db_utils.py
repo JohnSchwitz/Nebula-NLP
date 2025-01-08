@@ -7,11 +7,11 @@ class DatabaseOperations:
         if config is None:
             load_dotenv()
             self.config = {
-                'host': os.getenv('DB_HOST'),
-                'port': os.getenv('DB_PORT'),
-                'database': os.getenv('DB_NAME'),
-                'user': os.getenv('DB_USER'),
-                'password': os.getenv('DB_PASSWORD')
+            'host': '35.209.209.243',  # External IP for testing
+            'port': '5432',
+            'database': os.getenv('DB_NAME', 'wordpress'),
+            'user': os.getenv('DB_USER', 'wordpress_user'),
+            'password': os.getenv('DB_PASSWORD')
             }
         else:
             self.config = config

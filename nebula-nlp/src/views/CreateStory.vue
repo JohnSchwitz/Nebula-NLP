@@ -118,39 +118,6 @@
    </div>
    <img v-if="imageUrl" :src="imageUrl" alt="Generated image" class="w-full rounded-lg" />
  </div>
-
- <textarea 
-    data-test="storyteller-input"
-    v-model="storyTellerInput" 
-    placeholder="StoryTeller input:"
-  ></textarea>
-  
-  <button 
-    data-test="send-button"
-    @click="generateStory"
-  >
-    Send
-  </button>
-
-  <button 
-    data-test="complete-button"
-    @click="completeStory"
-  >
-    Complete Story
-  </button>
-
-  <input 
-    data-test="story-name"
-    v-model="storyName"
-  />
-
-  <button 
-    data-test="upload-button"
-    @click="uploadToDatabase"
-  >
-    Upload to Database
-  </button>
-
 </template>
 
 <script>
@@ -196,8 +163,8 @@ export default {
             storyTellerInput: "",
             error: "",
             loading: false,
-            isEditable: false,
-            isStoryCompleted: false,
+            isStoryStarted: false,
+            isCompleted: false,
             isScrollBoxEditable: false           
        }
     },
@@ -212,44 +179,78 @@ export default {
     },   
     
     methods: {
-       async generateStory() {
-           if (!this.storyTellerInput.trim()) return
+  async generateStory() {
+    if (!this.storyTellerInput.trim()) return
+    
+    this.loading = true
+    this.error = ""
+    
+    try {
+      // First time: clear storyInstructions
+      if (!this.isStoryStarted) {
+        this.storyContent = ""
+        this.isStoryStarted = true
+      }
 
-         this.error = ""
-          this.loading = true
-         try {
-            this.messages.push({ sender: 'StoryTeller', text: this.storyTellerInput });
-          const response = await axios.post('/create_story', {
-                user_id: this.user_id,
-              initial_prompt: this.storyTellerInput,
-             })
-              this.messages.push({ sender: 'AI', text: response.data.story })
-              this.storyContent = response.data.story
-              this.storyTellerInput = "";
-        } catch (error) {
-            this.error = "Failed to generate story. Please try again."
-             console.error("Error generating story:", error)
-         } finally {
-           this.loading = false
-         }
-      },
-      async uploadToDatabase() {
-        if (!this.isStoryCompleted || !this.storyName.trim()) {
-          this.error = "Please complete the story and provide a title first"
-          return
-        }
+      const response = await api.generateStory({
+        user_id: this.user_id,
+        initial_prompt: this.storyTellerInput,
+        system_prompt: this.storyPrompt
+      })
 
-        try {
-          const response = await axios.post('/save_story', {
-            user_id: this.user_id,
-            story_name: this.storyName,
-            story_content: this.storyContent
-          })
-          // Show success message
-        } catch (error) {
-          this.error = "Failed to save story"
-        }
-      },
+      this.storyContent = response.story
+      this.storyTellerInput = ""
+    } catch (error) {
+      this.error = "Failed to generate story. Please try again."
+    } finally {
+      this.loading = false
+    }
+  },
+
+  async completeStory() {
+    if (!this.storyContent.trim()) return
+    
+    this.loading = true
+    this.error = ""
+    
+    try {
+      const response = await api.completeStory({
+        user_id: this.user_id,
+        story_content: this.storyContent
+      })
+      
+      this.storyContent = response.story
+      this.isCompleted = true
+      this.isScrollBoxEditable = true  // Enable editing
+    } catch (error) {
+      this.error = "Failed to complete story"
+    } finally {
+      this.loading = false
+    }
+  },
+
+  async uploadToDatabase() {
+    if (!this.isCompleted || !this.storyName.trim() || this.storyName === "Story Title") {
+      this.error = "Please complete the story and provide a title"
+      return
+    }
+    
+    this.loading = true
+    this.error = ""
+    
+    try {
+      await api.saveStory({
+        user_id: this.user_id,
+        story_name: this.storyName,
+        story_content: this.storyContent
+      })
+    } catch (error) {
+      this.error = "Failed to save story"
+    } finally {
+      this.loading = false
+    }
+  },
+
      async downloadPDF() {
       if (!this.storyContent.trim()) return
 
@@ -275,6 +276,7 @@ export default {
           this.loading = false
        }
    },
+
    async generateImage() {
           if (!this.storyContent.trim()) return
 
@@ -291,25 +293,6 @@ export default {
         } finally {
          this.loading = false
       }
-   },
-   async completeStory() {   
-    if (!this.storyContent.trim()) return
-    
-    this.error = ""
-    this.loading = true
-    try {
-      const response = await axios.post('/complete_story', {
-        user_id: this.user_id,
-        story_content: this.storyContent
-      })
-      this.storyContent = response.data.story
-      this.isStoryCompleted = true
-      this.isScrollBoxEditable = true  // Enable editing after completion
-    } catch (error) {
-      this.error = "Failed to complete story"
-    } finally {
-      this.loading = false
-    }
    }
   }
 }

@@ -1,39 +1,38 @@
-// tests/components/CreateStory/CreateStory.spec.ts
-import { describe, it, expect, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { mount, flushPromises } from '@vue/test-utils'
 import CreateStory from '@/views/CreateStory.vue'
-import axios from 'axios'
+import api from '@/services/api'
 
-vi.mock('axios')
+vi.mock('@/services/api')
 
 describe('CreateStory.vue', () => {
+  let wrapper: any
+
   beforeEach(() => {
-    vi.clearAllMocks()
+    wrapper = mount(CreateStory, {
+      global: {
+        stubs: ['router-link']
+      }
+    })
   })
 
   it('enables ScrollBox editing after Complete Story', async () => {
-    const wrapper = mount(CreateStory)
-    
-    // Mock successful API response
-    vi.mocked(axios.post).mockResolvedValueOnce({
-      data: { story: 'Completed story' }
-    })
-    
+    const mockStory = 'Completed story content'
+    vi.mocked(api.completeStory).mockResolvedValueOnce(mockStory)
+
     await wrapper.vm.completeStory()
-    await wrapper.vm.$nextTick()
-    
+    await flushPromises()
+
     expect(wrapper.vm.isScrollBoxEditable).toBe(true)
+    expect(wrapper.vm.storyContent).toBe(mockStory)
   })
 
   it('handles API errors gracefully', async () => {
-    const wrapper = mount(CreateStory)
-    
-    // Mock API error
-    vi.mocked(axios.post).mockRejectedValueOnce(new Error('API Error'))
-    
+    vi.mocked(api.completeStory).mockRejectedValueOnce(new Error('Failed to complete story'))
+
     await wrapper.vm.completeStory()
-    await wrapper.vm.$nextTick()
-    
+    await flushPromises()
+
     expect(wrapper.vm.error).toBe('Failed to complete story')
   })
 })

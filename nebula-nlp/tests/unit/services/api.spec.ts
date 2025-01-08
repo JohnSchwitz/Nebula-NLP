@@ -1,67 +1,45 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import api from '@/services/api'; // Import your API service
-import { discoveryengine_v1beta } from '@google-cloud/discoveryengine'; // For type mocking
+// tests/unit/services/api.spec.ts
+import { describe, it, expect } from 'vitest'
 
-// Mock the Gemini API client
-const mockConverseConversation = vi.fn();
-const mockGeminiClient = {
-    converseConversation: mockConverseConversation,
-} as discoveryengine_v1beta.ConversationalSearchServiceClient;
+const API_URL = 'http://127.0.0.1:5000'  // Add this back
 
-vi.mock('@google-cloud/discoveryengine', () => ({
-    discoveryengine_v1beta: {
-        ConversationalSearchServiceClient: vi.fn(() => mockGeminiClient),
-        // ... mock other necessary parts of the Gemini library
-    },
-}));
+describe('Story Storage', () => {
+    let savedStoryId: number
 
+    it('should save a story to database', async () => {
+      const response = await fetch(`${API_URL}/save_story`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: 1,
+          story_name: "Test Story",
+          story_content: "Test story content"
+        })
+      })
 
-
-describe('api.generateNarrative', () => {
-
-    beforeEach(() => {
-        mockConverseConversation.mockResolvedValue({  // Mock a successful response
-            reply: { text: 'This is a mock generated narrative.' },
-        });
+      const data = await response.json()
+      console.log('Save response:', data)
+      expect(response.ok).toBe(true)
+      expect(data.story_id).toBeDefined()
+      savedStoryId = data.story_id
     })
 
-    afterEach(() => {
-        vi.clearAllMocks(); //Clear all mocks to ensure independence
+    it('should retrieve user stories', async () => {
+      const response = await fetch(`${API_URL}/get_stories?user_id=1`)
+      const data = await response.json()
+      console.log('Get stories response:', data)
+      
+      expect(response.ok).toBe(true)
+      expect(Array.isArray(data)).toBe(true)
+      expect(data.length).toBeGreaterThan(0)
+      
+      // Update to match the array format from the server
+      const savedStory = data.find(story => story[0] === savedStoryId)  // story[0] is story_id
+      expect(savedStory).toBeDefined()
+      expect(savedStory[1]).toBeDefined()  // story name
+      expect(savedStory[2]).toBeDefined()  // story content
     })
-
-
-
-  it('should call the Gemini API with the correct prompt', async () => {
-    const prompt = 'Write a story about a cat.';
-    await api.generateNarrative(prompt);
-
-    expect(mockConverseConversation).toHaveBeenCalledWith(expect.objectContaining({
-        query: { text: prompt },
-    }));
-
-
-  });
-
-  it('should return the generated narrative on success', async () => {
-
-    const narrative = await api.generateNarrative('Test prompt');
-    expect(narrative).toBe('This is a mock generated narrative.');
-  });
-
-
-  it('should handle errors from the Gemini API', async () => {
-    const errorMessage = 'Gemini API error';
-    mockConverseConversation.mockRejectedValueOnce(new Error(errorMessage)); // Mock an error
-
-    try{
-        await api.generateNarrative('Error test prompt');
-    }
-    catch(error){
-
-        expect(error).toEqual(new Error(errorMessage))
-    }
-
-
-
-  });
-});
+})
