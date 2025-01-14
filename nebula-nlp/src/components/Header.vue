@@ -8,10 +8,9 @@
               <div class="name-nav">
                 <h1 class="site-name">Nebula-NLP.com</h1>
                 <nav>
-                  <router-link to="/">Home</router-link>
-                  <router-link to="/example-story">Example Story</router-link>
-                  <router-link to="/create-story">Create Story</router-link>
-                  <router-link to="/create-narrative">Create Narrative</router-link>
+                    <a href="https://nebula-nlp.com">Home</a> <router-link to="/example-story">Example Story</router-link>
+                    <router-link to="/create-story">Create Story</router-link>
+                    <router-link to="/create-narrative">Create Narrative</router-link>
                 </nav>
               </div>
             </div>

@@ -1,6 +1,37 @@
 // CreateStory.vue
 <template>
   <div class="max-w-4xl mx-auto px-4">
+    <div class="mb-4">
+      <p class="text-lg font-didot leading-[1.2]">
+        Your turn to create a story. Provide as much detail on the characters, their names,
+        the setting, and action or challenge in <b>StoryTeller input:</b>.
+        <br><br>
+        The <b>AI StoryCreator</b> will then create a story. You may interact with the StoryCreator
+        as many times as required to alter or add to the story. Here is an example of AI StoryTelling:
+        <router-link
+          to="/example-story"
+          class="text-blue-600 hover:text-blue-800 underline"
+        >
+          Fearless Princess Hazel
+        </router-link>.
+        If you wish to create PDF's or a NARRATIVE from previous stories click the Create Narrative button in the NAVAGATION line above.
+      </p>
+    </div>
+
+    <div class="my-0">
+      <h2 class="text-2xl font-didot font-bold text-center mb-4 leading-[1.2]">
+        Instructions to Save Your Story and create a PDF
+      </h2>
+      <p class="text-lg font-didot text-left leading-[1.2]">
+        1) At the prompt below click the Complete Story BUTTON to show your complete Story
+        in the ScrollBox. You may then EDIT your story in the ScrollBox.
+      </p>
+      <p class="text-lg font-didot text-left leading-[1.2]">
+        2) Then, enter a Story Name, Upload to Database, and download a PDF of the Story.
+      </p>
+    </div>
+  </div>
+  <div class="max-w-4xl mx-auto px-4">
     <div class="flex flex-wrap items-center gap-4 my-8">
       <label for="storyName" class="text-lg font-didot">Story Name</label>
       <input
@@ -56,21 +87,18 @@
     </div>
 
     <!-- ScrollBox -->
-    <div class="bg-chatbox-light rounded-lg p-4 mb-4 min-h-[200px] max-h-[400px] overflow-y-auto">
+    <div class="bg-chatbox-light rounded-lg p-4 mb-4 min-h-[200px] max-h-[600px] overflow-y-auto">
       <textarea
         v-if="isEditable"
         v-model="storyContent"
-        class="flex-1 w-full h-full bg-white text-black p-3 rounded resize-y"
+        class="flex-1 w-full h-full min-h-[200px] max-h-[600px] bg-white text-black p-3 rounded resize-y"
       ></textarea>
-      <div v-else v-for="(message, index) in messages"
-        :key="index"
-        class="mb-3">
-        <div :class="message.sender === 'AI' ? 'bg-white' : 'bg-white'"
-          class="rounded p-3 relative">
-          <span class="text-black block"
-            :class="message.sender === 'AI' ? 'ml-0' : ''">
-            {{ message.text }}
-          </span>
+      <div v-else v-for="(message, index) in messages" :key="index" class="mb-3">
+        <div
+          :class="message.sender === 'AI' ? 'bg-white text-black block p-3' : 'bg-white text-black block p-3'"
+          class="rounded relative"
+        >
+          {{ message.text }}
         </div>
       </div>
     </div>
@@ -113,7 +141,7 @@
 
 <script>
 import axios from 'axios'
-import api from './services/api'
+import api from '../services/api'
 import { ref, onMounted } from 'vue'
 const API_URL = 'http://127.0.0.1:5000'
 
@@ -154,39 +182,36 @@ export default {
     },
 
     methods: {
-    async generateStory() {
-        console.log('generateStory called')
-        if (!this.storyTellerInput.trim()) return
-        
-        this.loading = true
-        this.error = "Generating story..."  // Status message
-        
-        try {
-            const requestData = {
-                user_id: this.user_id,
-                initial_prompt: this.storyTellerInput,
-                current_story: this.storyContent
-            }
-            
-            if (this.isFirstPrompt) {
-                requestData.system_prompt = this.storyPrompt
-                this.isFirstPrompt = false
-            }
+      async generateStory() {
+      if (!this.storyTellerInput.trim()) return;
 
-            const response = await axios.post('http://127.0.0.1:5000/create_story', requestData)
-            
-            // Clear messages and show only current story
-            this.messages = []
-            this.messages.push({ sender: 'AI', text: response.data.story })
-            this.storyContent = response.data.story
-            this.storyTellerInput = ""
-            this.error = ""  // Clear status message on success
-        } catch (error) {
-            console.error('API Error:', error)
-            this.error = "Failed to generate story. Please try again."
-        } finally {
-            this.loading = false
+      this.loading = true;
+      this.error = "Generating story...";
+
+      try {
+        const requestData = {
+          user_id: this.user_id,
+          initial_prompt: this.storyTellerInput,
+          current_story: this.storyContent,
+        };
+
+        if (this.isFirstPrompt) {
+          requestData.system_prompt = this.storyPrompt;
+          this.isFirstPrompt = false;
         }
+
+        const response = await api.generateStory(requestData); // Use api wrapper
+        this.messages = [];
+        this.messages.push({ sender: 'AI', text: response });  // Update messages array
+        this.storyContent = response;  //  Update Story Content
+        this.storyTellerInput = "";
+        this.error = "";
+      } catch (error) {
+        console.error("API Error:", error);
+        this.error = "Failed to generate story. Please try again.";
+      } finally {
+        this.loading = false;
+      }
     },
 
     async completeStory() {
@@ -217,58 +242,68 @@ export default {
 
 // Then update all axios calls:
 async uploadToDatabase() {
-  this.error = "Saving to database..."
-    if (!this.isCompleted || !this.storyName.trim() || this.storyName === "Story Title") {
-        this.error = "Please complete the story and provide a title"
-        return
-    }
-    
-    this.loading = true
-    this.error = ""
-    
-    try {
-        await axios.post(`${API_URL}/save_story`, {
-            user_id: this.user_id,
-            story_name: this.storyName,
-            story_content: this.storyContent
-        })
-    } catch (error) {
-        console.error('API Error:', error)
-        this.error = "Failed to save story"
-    } finally {
-        this.loading = false
-    }
-},
+            if (!this.isCompleted || !this.isStoryNameValid) {
+                this.error = "Please complete the story and provide a valid title.";
+                return;
+            }
+            this.loading = true;
+            this.error = "Saving to database..."; // Set the loading message here
 
-async downloadPDF() {
-  this.error = "Generating PDF..."
-    if (!this.storyContent.trim()) return
+            try {
+                const response = await axios.post(`${API_URL}/save_story`, {
+                    user_id: this.user_id,
+                    story_name: this.storyName,
+                    story_content: this.storyContent,
+                });
 
-    this.error = ""
-    this.loading = true
-    try {
-        const response = await axios.post(`${API_URL}/generate_pdf`, {
-            story_name: this.storyName,
-            story_content: this.storyContent
-        }, { 
-            responseType: 'blob'
-        })
+                if (response.status >= 200 && response.status < 300) {
+                    // Success handling (clear error, show success message, etc.)
+                    this.error = "";
+                    this.successMessage = `Story "${this.storyName}" saved successfully!`; // Use successMessage
+                    setTimeout(() => { this.successMessage = ""; this.error = ""; }, 5000); // Clear messages
+                } else {
+                    throw new Error(`Failed to save: ${response.status} ${response.statusText}`);
+                }
 
-        const url = window.URL.createObjectURL(new Blob([response.data]))
-        const link = document.createElement('a')
-        link.href = url
-        link.setAttribute('download', `${this.storyName || 'story'}.pdf`)
-        document.body.appendChild(link)
-        link.click()
-        link.remove()
-        window.URL.revokeObjectURL(url)
-    } catch (error) {
-        console.error('API Error:', error)
-        this.error = "Failed to generate PDF"
-    } finally {
-        this.loading = false
-    }
-},
+
+            } catch (error) {
+                console.error("API Error:", error);
+                this.error = "Failed to save story. Please try again."; // Display specific error message
+            } finally {
+                this.loading = false;
+            }
+        },
+
+    async downloadPDF() {
+    this.error = "Generating PDF..."; // Provide user feedback while PDF generates.
+
+        if (!this.storyContent.trim()) return;
+
+        this.loading = true;
+        try {
+            const response = await axios.post(`${API_URL}/generate_pdf`, {
+                story_name: this.storyName,
+                story_content: this.storyContent
+            }, {
+                responseType: 'blob'
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `${this.storyName || 'story'}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url); // Release memory
+             this.error = ""; // Clear if successful
+        } catch (error) {
+            console.error('API Error:', error);
+            this.error = "Failed to generate PDF. Please try again.";
+        } finally {
+            this.loading = false;
+        }
+    },
 
     async generateImage() {
             this.error = "Not yet implemented"
