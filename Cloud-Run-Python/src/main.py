@@ -9,6 +9,25 @@ CORS(app)  # Enable CORS for all routes
 gemini = GeminiAPI()
 db = DatabaseOperations()
 
+@app.route('/api/generate-narrative', methods=['POST'])
+def generate_narrative():
+    data = request.json
+    prompt = data.get('prompt')
+    temperature = data.get('temperature', 0.7)
+    max_tokens = data.get('max_tokens', 2000)
+
+    try:
+        response = openai.Completion.create(
+            engine="text-davinci-003",
+            prompt=prompt,
+            temperature=temperature,
+            max_tokens=max_tokens
+        )
+        narrative = response.choices[0].text.strip()
+        return jsonify({'narrative': narrative})
+    except Exception as e:
+        
+        return jsonify({'error': str(e)}), 500
 @app.route('/create_story', methods=['POST'])
 def create_story():
     data = request.get_json()
@@ -27,10 +46,9 @@ def create_story():
 def complete_story():
     data = request.get_json()
     story_content = data.get('story_content')
-    complete_prompt = data.get('complete_prompt', 'Please provide the complete story')
-    
+    complete_prompt = data.get('complete_prompt', 'Please provide the complete story')   
     prompt = f"{complete_prompt}:\n\n{story_content}"
-    completed_story = gemini.generate_content(prompt, max_tokens=2048)
+    completed_story = gemini.generate_content(prompt, max_tokens=6000)
     return jsonify({'story': completed_story})
 
 @app.route('/save_story', methods=['POST'])

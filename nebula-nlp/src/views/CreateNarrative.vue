@@ -240,31 +240,18 @@ export default {
   },
   methods: {
     async generateNarrative() {
-  if (this.selectedStoryIds.length === 0) {
-    this.error = "Please select at least one story"
-    return
-  }
-
-  this.error = ""
-  this.loading = true
-  try {
-    this.selectedStories = this.stories.filter(story => 
-      this.selectedStoryIds.includes(story.story_id)
-    )
-    
-    // Combine selected stories into editable content
-    this.narrativeContent = this.selectedStories
-      .map(story => story.story_content)
-      .join('\n\n')
-    
-    this.isEditable = true  // Make content editable immediately
-  } catch (error) {
-    this.error = "Failed to start narrative. Please try again."
-    console.error("Error starting narrative:", error)
-  } finally {
-    this.loading = false
-  }
-},
+      try {
+        const response = await axios.post('/api/generate-narrative', {
+          prompt: this.prompt,
+          temperature: this.temperature,
+          max_tokens: this.max_tokens
+        });
+        this.result = response.data.narrative;
+      } catch (error) {
+        console.error('Error generating narrative:', error);
+        this.result = 'Error generating narrative';
+      }
+    },
 
     async sendNarrativeInput() {
       if (!this.narrativeInput.trim()) return

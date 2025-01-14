@@ -57,29 +57,29 @@
 
     <!-- ScrollBox -->
     <div class="bg-chatbox-light rounded-lg p-4 mb-4 min-h-[200px] max-h-[400px] overflow-y-auto">
-  <textarea
-    v-if="isEditable"
-    v-model="storyContent"
-    class="w-full h-full bg-white text-black p-3 rounded resize-none"
-  ></textarea>
-  <div v-else v-for="(message, index) in messages"
-    :key="index"
-    class="mb-3">
-    <div :class="message.sender === 'AI' ? 'bg-white' : 'bg-white'"
-      class="rounded p-3 relative">
-      <span class="text-black block"
-        :class="message.sender === 'AI' ? 'ml-0' : ''">
-        {{ message.text }}
-      </span>
+      <textarea
+        v-if="isEditable"
+        v-model="storyContent"
+        class="flex-1 w-full h-full bg-white text-black p-3 rounded resize-y"
+      ></textarea>
+      <div v-else v-for="(message, index) in messages"
+        :key="index"
+        class="mb-3">
+        <div :class="message.sender === 'AI' ? 'bg-white' : 'bg-white'"
+          class="rounded p-3 relative">
+          <span class="text-black block"
+            :class="message.sender === 'AI' ? 'ml-0' : ''">
+            {{ message.text }}
+          </span>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
     <div class="flex flex-wrap items-center justify-between gap-4 mb-2 w-full">
       <p class="text-lg font-didot font-bold text-left leading-[1.2]">
         Send story to AI:
       </p>
-      <!-- Complete Story button-->
+      <!-- Send button-->
       <button
         @click="generateStory"
         :disabled="!storyTellerInput.trim() || loading"
@@ -101,14 +101,12 @@
         rows="2"
         class="flex-1 bg-white placeholder-black resize-y p-2 focus:outline-none"
       ></textarea>
-      <!-- Send button
-      <button
-        @click="generateStory"
-        :disabled="!storyTellerInput.trim() || loading"
-        class="bg-white text-black px-6 py-2 rounded font-bold text-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        Send
-      </button> -->
+    </div>
+    <div v-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4">
+      <span class="block sm:inline">{{ error }}</span>
+    </div>
+    <div v-if="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="spinner"></div>
     </div>
   </div>
 </template>
@@ -156,67 +154,66 @@ export default {
     },
 
     methods: {
-      async generateStory() {
-        this.error = "Generating story..."
-    if (!this.storyTellerInput.trim()) return
-    
-    this.loading = true
-    this.error = ""
-    
-    try {
-        const requestData = {
-            user_id: this.user_id,
-            initial_prompt: this.storyTellerInput,
-            current_story: this.storyContent
-        }
+    async generateStory() {
+        console.log('generateStory called')
+        if (!this.storyTellerInput.trim()) return
         
-        if (this.isFirstPrompt) {
-            requestData.system_prompt = this.storyPrompt
-            this.isFirstPrompt = false
-        }
+        this.loading = true
+        this.error = "Generating story..."  // Status message
+        
+        try {
+            const requestData = {
+                user_id: this.user_id,
+                initial_prompt: this.storyTellerInput,
+                current_story: this.storyContent
+            }
+            
+            if (this.isFirstPrompt) {
+                requestData.system_prompt = this.storyPrompt
+                this.isFirstPrompt = false
+            }
 
-        const response = await axios.post('http://127.0.0.1:5000/create_story', requestData)
-        
-        // Clear messages and show only current story
-        this.messages = []
-        this.messages.push({ sender: 'AI', text: response.data.story })
-        this.storyContent = response.data.story
-        this.storyTellerInput = ""
-    } catch (error) {
-        console.error('API Error:', error)
-        this.error = "Failed to generate story. Please try again."
-    } finally {
-        this.loading = false
-    }
-},
+            const response = await axios.post('http://127.0.0.1:5000/create_story', requestData)
+            
+            // Clear messages and show only current story
+            this.messages = []
+            this.messages.push({ sender: 'AI', text: response.data.story })
+            this.storyContent = response.data.story
+            this.storyTellerInput = ""
+            this.error = ""  // Clear status message on success
+        } catch (error) {
+            console.error('API Error:', error)
+            this.error = "Failed to generate story. Please try again."
+        } finally {
+            this.loading = false
+        }
+    },
 
-async completeStory() {
-  this.error = "Completing story..."
-    if (!this.storyContent.trim()) return
-    
-    this.loading = true
-    this.error = ""
-    
-    try {
-      const response = await axios.post(`${API_URL}/complete_story`, {
-        user_id: this.user_id,
-        story_content: this.storyContent,
-        complete_prompt: "Please provide the complete story"  // Add this
-      })
+    async completeStory() {
+        console.log('completeStory called')
         
-        // Clear everything and show complete story
-        this.messages = []
-        this.messages.push({ sender: 'AI', text: response.data.story })
-        this.storyContent = response.data.story
-        this.isEditable = true
-        this.isCompleted = true
-    } catch (error) {
-        console.error('API Error:', error)
-        this.error = "Failed to complete story"
-    } finally {
-        this.loading = false
-    }
-},
+        this.loading = true
+        this.error = "Completing story..."  // Status message
+        
+        try {
+            const response = await axios.post('http://127.0.0.1:5000/complete_story', {
+                user_id: this.user_id,
+                story_content: this.storyContent,
+                complete_prompt: "Please provide the complete story incorporating all previous elements"  // Modified prompt
+            })
+            
+            // Update ScrollBox with complete story
+            this.storyContent = response.data.story
+            this.isEditable = true
+            this.isCompleted = true
+            this.error = ""  // Clear status message on success
+        } catch (error) {
+            console.error('API Error:', error)
+            this.error = "Failed to complete story"
+        } finally {
+            this.loading = false
+        }
+    },
 
 // Then update all axios calls:
 async uploadToDatabase() {
@@ -273,25 +270,13 @@ async downloadPDF() {
     }
 },
 
-        async generateImage() {
-          this.error = "Not yet implemented"
-            if (!this.isCompleted) return
-            
-            this.loading = true
-            this.error = ""
-            
-            try {
-                const response = await axios.post('/generate_image', {
-                    story_content: this.storyContent
-                })
-                this.imageUrl = response.data.image_url
-            } catch (error) {
-                this.error = "Failed to generate image"
-            } finally {
-                this.loading = false
-            }
+    async generateImage() {
+            this.error = "Not yet implemented"
+            setTimeout(() => {
+                this.error = ""
+            }, 2000)  // Clear message after 2 seconds
         }
-    }
+      }
 }
 </script>
 
