@@ -4,7 +4,7 @@ from flask_cors import CORS
 from utils.utils import DatabaseOperations, generate_story_pdf, generate_narrative_pdf, GeminiAPI  # Correct import
 
 app = Flask(__name__)
-CORS(app)
+cors = CORS(app, resources={r"/create_story": {"origins": "http://localhost:5173"}})
 load_dotenv()
 
 db = DatabaseOperations()

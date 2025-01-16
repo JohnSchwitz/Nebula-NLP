@@ -1,6 +1,6 @@
 # tests/unit/test_db_utils.py
 import pytest
-from src.utils.db_utils import DatabaseOperations
+from utils.utils import DatabaseOperations
 
 def test_database_connection(db):
     """Test database connectivity"""

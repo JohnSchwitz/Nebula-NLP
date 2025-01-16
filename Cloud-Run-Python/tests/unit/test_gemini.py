@@ -1,6 +1,6 @@
 # tests/unit/test_gemini.py
 import pytest
-from src.utils.gemini_utils import GeminiAPI
+from utils.utils.gemini_utils import GeminiAPI
 
 def test_gemini_connection():
     gemini = GeminiAPI()
