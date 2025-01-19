@@ -1,25 +1,6 @@
 // CreateNarrative.vue
 <template> 
-  <div class="max-w-4xl mx-auto px-4">
-    <div class="flex flex-wrap items-left  gap-4 mb-2 w-full">
-          <p class="text-lg font-didot font-bold text-left leading-[1.2]">
-            Generate Narrative:
-          </p>  
-      <!-- Create Narrative button -->
-      <button 
-        @click="generateText"
-        class="bg-white text-black px-4 py-2 rounded font-bold hover:bg-gray-100 font-didot"
-      >
-        Create Narrative
-      </button>  
-      <!-- <input v-model="prompt" placeholder="Generate Narrative">
-      <button @click="generateText">Generate Narrative</button> -->
-      <div v-if="story">
-          {{ story }}
-      </div>
-    </div>
-  </div>
-  <div class="max-w-4xl mx-auto px-4">
+  <div class="max-w-4xl mx-auto px-4 my-4">
     <div class="mb-8">
       <p class="text-lg font-didot leading-[1.2]">
         The AI Agent will create a NARRATIVE from your previous STORIES. 
@@ -32,49 +13,32 @@
     </div>
 
     <h2 class="text-2xl font-didot mb-4">Select Stories to Include</h2>
-
+  
+    <!-- Stories List -->
     <div class="bg-white rounded-lg p-6 shadow-lg mb-6">
-      <div class="flex mb-4 font-didot font-bold">
-        <div class="w-1/3">
-          Story Name
-        </div>
-        <div class="w-2/3">
-          Story
-        </div>
-      </div>
+    <table v-if="stories.length">
+      <thead>
+        <tr>
+          <th></th>
+          <th class="story-name-header">Story Name</th>
+          <th class="story-content-header">Story</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="story in stories" :key="story.story_id">
+          <td>
+            <input type="checkbox" v-model="selectedStoryIds" :value="story.story_id">
+          </td>
+          <td class="story-name">{{ story.story_name }}</td>
+          <td class="story-content">{{ story.story }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p v-else>No stories found for this user.</p>
+    <pre>{{ stories }}</pre> <div v-if="error" class="error-message">{{ error }}</div> <p v-if="!error && stories.length === 0">No stories found for this user.</p>
+    <p class="mt-4">{{ selectedStoryIds.length }} stories selected.</p>
+  </div>
 
-      <div class="space-y-4">
-        <div class="flex items-start border-b pb-2">
-          <div class="w-1/3 flex items-center">
-            <input 
-              type="checkbox" 
-              value="1" 
-              v-model="selectedStoryIds"
-              class="mr-2 w-4 h-4"
-            />
-            <span class="font-didot">The Lost Expedition</span>
-          </div>
-          <div class="w-2/3 font-didot text-sm">
-            Professor Amelia Thorne, a paleontologist with a fiery spirit and a penchant for the unorthodox, had scoffed at the notion of a living Pterodactylus...
-          </div>
-        </div>
-        <div class="flex items-start border-b pb-2">
-          <div class="w-1/3 flex items-center">
-            <input 
-              type="checkbox" 
-              value="2" 
-              v-model="selectedStoryIds"
-              class="mr-2 w-4 h-4"
-            />
-            <span class="font-didot">Fearless Princess Hazel</span>
-          </div>
-          <div class="w-2/3 font-didot text-sm">
-            Princess Hazel peered out the window of her bedroom in the palace, watching as dusk fell over the Kingdom of the Dragons...
-          </div>
-        </div>
-      </div>
-    </div>
-    
     <div class="my-8">
       <h2 class="text-2xl font-bold font-didot text-center mb-4 leading-[1.2]">
         Instructions to Save Your Narrative and create a PDF
@@ -155,7 +119,7 @@
       <textarea 
         v-if="isEditable"
         v-model="storyContent"
-        class="w-full h-full bg-white text-black p-3 rounded resize-none"
+        class="flex-1 w-full h-full min-h-[200px] max-h-[600px] bg-white text-black p-3 rounded resize-y"
       ></textarea>
     </div>
 
@@ -182,205 +146,193 @@
 </template>
 
 <script>
-import axios from 'axios'
-import api from './services/api'
-import { ref, onMounted } from 'vue'
-
-const story = ref("")
-const prompt = ref("")
-const conversationId = ref(null)
-
-onMounted(async () => {  // Get a new conversation ID when the component mounts
-  conversationId.value = await api.startStoryCreation()
-})
-
-async function generateText(){
-    try {
-        story.value = await api.generateNarrative(prompt.value, conversationId.value)
-
-    } catch (error) {
-        console.error(error)
-
-    }
-}
+import axios from 'axios';
+import api from '../services/api';
 
 export default {
   name: 'CreateNarrative',
   data() {
     return {
-      stories: [
-        {
-          story_id: 1,
-          story_name: "The Lost Expedition",
-          story_content: "Professor Amelia Thorne, a paleontologist with a fiery spirit and a penchant for the unorthodox, had scoffed at the notion of a living Pterodactylus..."
-        },
-        {
-          story_id: 2,
-          story_name: "Fearless Princess Hazel",
-          story_content: "Princess Hazel peered out the window of her bedroom in the palace, watching as dusk fell over the Kingdom of the Dragons..."
-        }
-      ],
       narrativeContent: "",
-      narrativeName: "Narrative Title",
+      narrativeName: "",
+      userId: 1,
+      stories: [],
       selectedStoryIds: [],
-      selectedStories: [], // To store full story details for PDF
-      messages: [],
+      selectedStories: [],
+      messages: [{ sender: 'AI', text: `Creating a narrative from selected stories. The AI will weave together the elements into a cohesive narrative with new twists. You may modify as needed.` }],
       narrativeInput: "",
       loading: false,
       error: "",
       user_id: 1,
       isEditable: false,
-      isCompleted: false,      
-      narrativePrompt: `Creating a narrative from selected stories. The AI will weave together the characters, settings, and plots into a cohesive narrative with new twists and connections. You may modify the narrative as needed.`
-    }
+      isCompleted: false,
+      settingsVersion: 1,
+      saveStatus: null, // Add saveStatus to data
+
+    };
   },
   mounted() {
-    axios.defaults.baseURL = import.meta.env.VITE_APP_API_URL
-    this.messages.push({ sender: 'AI', text: this.narrativePrompt })
+    axios.defaults.baseURL = import.meta.env.VITE_APP_API_URL;
+    console.log("Component mounted. User ID:", this.userId);  // Verify userId
+    this.fetchStories();
   },
   methods: {
-    async generateNarrative() {
-  if (this.selectedStoryIds.length === 0) {
-    this.error = "Please select at least one story"
-    return
-  }
+    async fetchStories() {
+        this.error = ""; // Clear previous errors
+        try {
+            const response = await axios.get(`/get_user_stories?user_id=${this.userId}&t=${Date.now()}`);
+            if (Array.isArray(response.data)) {  // Check if data is array
+                this.stories = response.data;
 
-  this.error = ""
-  this.loading = true
-  try {
-    this.selectedStories = this.stories.filter(story => 
-      this.selectedStoryIds.includes(story.story_id)
-    )
-    
-    // Combine selected stories into editable content
-    this.narrativeContent = this.selectedStories
-      .map(story => story.story_content)
-      .join('\n\n')
-    
-    this.isEditable = true  // Make content editable immediately
-  } catch (error) {
-    this.error = "Failed to start narrative. Please try again."
-    console.error("Error starting narrative:", error)
-  } finally {
-    this.loading = false
-  }
-},
+            } else {
+                this.stories = []; // Set stories to an empty array if not an array.  Handle the case where an error was returned but wrapped in a 200 response
+                this.error = "Invalid stories data. Please check the logs."
+                console.error("Invalid stories data:", response.data)
+            }
 
-    async sendNarrativeInput() {
-      if (!this.narrativeInput.trim()) return
 
-      this.error = ""
-      this.loading = true
+        } catch (error) {
+            this.stories = []  // Clear the stories array if there's an error
+            console.error("Error fetching stories:", error);
+            this.error = "Failed to fetch stories. Please try again.";
+        }
+    },
+    async startNarrative() {
+      this.isEditable = false;
+      this.messages = [];  // Clear previous messages
+      this.narrativeContent = ""; // Clear the narrative content
       try {
-        this.messages.push({ sender: 'StoryTeller', text: this.narrativeInput })
-        const response = await axios.post('/update_narrative', {
-          user_id: this.user_id,
-          narrative_input: this.narrativeInput,
-          current_narrative: this.narrativeContent,
-          selected_stories: this.selectedStories // Include source stories
-        })
-        this.messages.push({ sender: 'AI', text: response.data.narrative })
-        this.narrativeContent = response.data.narrative
-        this.narrativeInput = ""
+        if (!this.selectedStories || this.selectedStories.length === 0) {
+               this.error = "Please select at least one story.";
+               return;
+        }
+        const storiesText = this.selectedStories.map(story => story.story).join('\n\n'); // Combine selected stories
+        const response = await api.generateNarrative(storiesText);  // Pass combined stories text to API
+        this.narrativeContent = response.data.narrative;
+        this.messages.push({ sender: 'AI', text: response.data.narrative });
+        this.isEditable = true;
       } catch (error) {
-        this.error = "Failed to update narrative. Please try again."
-        console.error("Error updating narrative:", error)
-      } finally {
-        this.loading = false
+        this.error = "Failed to start narrative. Please try again.";
+        console.error(error);
       }
     },
-
-    async uploadToDatabase() {
-      if (!this.narrativeName.trim() || !this.narrativeContent.trim()) return
-
-      this.error = ""
-      this.loading = true
-      try {
-        const response = await axios.post('/save_narrative', {
-          user_id: this.user_id,
-          narrative_name: this.narrativeName,
-          narrative_content: this.narrativeContent,
-          source_stories: this.selectedStories // Include source stories
-        })
-        // Add success message or notification here
-        console.log('Narrative saved successfully')
-      } catch (error) {
-        this.error = "Failed to save narrative. Please try again."
-        console.error("Error saving narrative:", error)
-      } finally {
-        this.loading = false
-      }
-    },
-
-    async downloadPDF() {
-      if (!this.narrativeContent.trim()) return
-
-      this.error = ""
-      this.loading = true
-      try {
-        const response = await axios.post('/generate_narrative_pdf', {
-          narrative_name: this.narrativeName,
-          narrative_content: this.narrativeContent,
-          source_stories: this.selectedStories.map(story => ({
-            name: story.story_name,
-            id: story.story_id
-          }))
-        }, { responseType: 'blob' })
-
-        const url = window.URL.createObjectURL(new Blob([response.data]))
-        const link = document.createElement('a')
-        link.href = url
-        link.setAttribute('download', `${this.narrativeName || 'narrative'}.pdf`)
-        document.body.appendChild(link)
-        link.click()
-        link.remove()
-      } catch (error) {
-        this.error = "Failed to generate PDF. Please try again."
-        console.error("Error generating PDF:", error)
-      } finally {
-        this.loading = false
-      }
-    },
-
     async createNarrative() {
-  if (!this.narrativeContent.trim()) return
+        try {
+          if (!this.narrativeContent.trim()) {
+             this.error = "Narrative content cannot be empty.";
+             return; // Or throw an error
+           }
 
-  this.error = ""
-  this.loading = true
-  try {
-    const response = await axios.post('/complete_narrative', {
-      user_id: this.user_id,
-      narrative_content: this.narrativeContent,
-      source_stories: this.selectedStories
-    })
-    this.narrativeContent = response.data.narrative
-    this.isEditable = true
-    this.isCompleted = true  // Enable other buttons
-  } catch (error) {
-    this.error = "Failed to complete narrative. Please try again."
-    console.error("Error completing narrative:", error)
-  } finally {
-    this.loading = false
-  }
-},
+            // Assuming you have an API route for /complete_narrative
+           const response = await axios.post('/complete_narrative', {
+                narrative_content: this.narrativeContent,
+                settings_version: this.settingsVersion, // Assuming you need this
+                // ... any other required parameters
+           });
+            this.narrativeContent = response.data.narrative // Assign response
+           this.isEditable = true;
+            this.isCompleted = true;
 
-    // Helper method to track selected stories
+        } catch (error) {
+            console.error("Error completing narrative:", error)
+            this.error = "Failed to complete narrative."; // Or display specific error
+        }
+    },
+    async sendNarrativeInput() {
+            if (!this.narrativeInput.trim()) return;
+
+            this.loading = true;
+            this.error = ""; // Clear any previous errors
+
+            try {
+                this.messages.push({ sender: 'StoryTeller', text: this.narrativeInput });
+
+                const response = await api.updateNarrative({ // Use API wrapper, send settingsVersion
+                    user_id: this.user_id,
+                    narrative_input: this.narrativeInput,
+                    current_narrative: this.narrativeContent,
+                    selected_stories: this.selectedStories,
+                    settings_version: this.settingsVersion,
+                });
+
+                this.messages.push({ sender: 'AI', text: response.narrative });  // Use response.narrative
+                this.narrativeContent = response.narrative; // Update narrativeContent
+                this.narrativeInput = "";
+            } catch (error) {
+                console.error("Error updating narrative:", error);
+                this.error = "Failed to update narrative. Please try again.";
+            } finally {
+                this.loading = false;
+            }
+    },
+    async uploadToDatabase() {
+       try {
+            if (!this.narrativeContent || !this.narrativeName) {
+                this.error = "Please create a narrative and enter a name before uploading.";
+                return;
+            }
+
+            const response = await api.uploadNarrative({
+                user_id: this.user_id,
+                narrative_name: this.narrativeName,
+                narrative_content: this.narrativeContent,
+                source_stories: this.selectedStoryIds, // Or this.selectedStories if needed
+            });
+
+            this.saveStatus = true; // Set saveStatus to true on success
+            setTimeout(() => {
+                this.saveStatus = false;
+            }, 3000);
+        } catch (error) {
+            console.error("Error uploading narrative:", error);
+            this.error = "Failed to upload narrative. Please try again."; // Provide feedback to the user
+        }
+
+    },
+    async downloadPDF() {   
+            if (!this.narrativeContent) {
+                this.error = "Please create a narrative before downloading a PDF.";
+                return;
+            }
+            try {
+                const pdfContent = await api.downloadNarrativePDF({
+                    narrative_name: this.narrativeName,
+                    narrative_content: this.narrativeContent,
+                    selected_stories: this.selectedStories,
+                });
+
+                // Create a download link
+                const link = document.createElement('a');
+                const blob = new Blob([pdfContent], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob)
+
+                link.href = url
+                link.download = `${this.narrativeName}.pdf` // Or a default name
+                link.click() // Trigger download
+
+                URL.revokeObjectURL(url) // Release memory
+
+            } catch (error) {
+                console.error("Error downloading PDF:", error);
+                this.error = "Failed to download PDF. Please try again."; // Or handle error as needed
+
+            }
+    },
     updateSelectedStories() {
-      this.selectedStories = this.stories.filter(story => 
-        this.selectedStoryIds.includes(story.story_id)
-      )
-    }
+      this.selectedStories = this.stories.filter(story => this.selectedStoryIds.includes(story.story_id));
+    },
   },
-  watch: {
-    // Watch for changes in selected stories
-    selectedStoryIds: {
-      handler() {
-        this.updateSelectedStories()
-      },
-      deep: true
-    }
-  }
-}
+    watch: { // The watch remains as it was: correct and necessary
+        selectedStoryIds: {
+            handler() {
+                this.updateSelectedStories(); // Correct call to update selected stories
+            },
+            immediate: true, // Ensures initial filtering when stories are loaded
+            deep: true,
+
+        },
+    },
+};
 </script>
 
 <style scoped>
@@ -394,5 +346,23 @@ export default {
 
 .font-didot {
   font-family: 'Didot', serif;
+}
+.error-message {
+  color: red;
+}
+.story-name-header {
+  width: 25%; /* 1/4 width for Story Name header */
+}
+.story-name {
+  word-break: break-all; /* Wrap long story names */
+  max-width: 25%;        /* Prevent overflowing the container */
+}
+.story-content-header {
+  width: 75%; /* 3/4 width for Story header */
+}
+.story-content {
+  white-space: pre-line; /* Preserve whitespace and line breaks */
+  word-break: break-word; /* Wrap long words */
+  max-width: 75%;         /* Takes 3/4 width */
 }
 </style>
