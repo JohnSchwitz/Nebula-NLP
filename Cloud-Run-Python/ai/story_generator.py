@@ -1,5 +1,5 @@
-# src/ai/story_generator.py
-from src.ai.gemini_direct import GeminiAPI
+# ai/story_generator.py
+from ai.gemini_direct import GeminiAPI
 import logging
 
 logger = logging.getLogger(__name__)

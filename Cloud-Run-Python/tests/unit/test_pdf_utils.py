@@ -1,6 +1,6 @@
 # tests/unit/test_pdf_utils.py
 import pytest
-from src.utils.pdf_utils import generate_story_pdf
+from utils.pdf_utils import generate_story_pdf
 from io import BytesIO
 
 def test_generate_story_pdf():

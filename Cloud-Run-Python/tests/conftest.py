@@ -4,7 +4,7 @@ import logging
 import os
 import sys
 from dotenv import load_dotenv
-from src.utils.db_utils import DatabaseOperations
+from utils.db_utils import DatabaseOperations
 
 # Configure logging
 logging.basicConfig(

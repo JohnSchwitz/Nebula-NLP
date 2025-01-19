@@ -1,8 +1,8 @@
 # tests/test_gemini_operations.py
 import pytest
 import logging
-from src.ai.gemini_direct import GeminiAPI
-from src.ai.story_generator import StoryGenerator
+from ai.gemini_direct import GeminiAPI
+from ai.story_generator import StoryGenerator
 
 logger = logging.getLogger(__name__)
 
